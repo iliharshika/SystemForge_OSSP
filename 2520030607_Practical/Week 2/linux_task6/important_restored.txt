@@ -1,0 +1,10 @@
+Operating System Lab
+Linux Commands
+Backup and Restore
+Learning cp command
+Learning mv command
+Learning chmod command
+Learning mkdir command
+Learning rm command
+Learning directories
+End of File
