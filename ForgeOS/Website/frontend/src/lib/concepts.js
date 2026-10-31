@@ -1,0 +1,66 @@
+// Educational content. Code snippets are taken from the project's real NanoKernel/process.c.
+export const CONCEPTS = [
+  {
+    id: 'fork', title: 'fork()', tag: 'System call',
+    short: 'Creates a new process by duplicating the calling one.',
+    detail: "After fork() there are two nearly identical processes. fork() returns the child's PID to the parent, 0 to the child, and -1 if it failed. That return value is how each process knows which one it is.",
+    code: 'child_pid = fork();\nif (child_pid == 0) {\n    /* child */\n}',
+    live: (r) => r && `Last run (${r.command}): parent ${r.parent_pid} received ${r.child_pid} from fork().`,
+  },
+  {
+    id: 'execvp', title: 'execvp()', tag: 'System call',
+    short: 'Replaces the current process image with a new program.',
+    detail: 'The child calls execvp(args[0], args). The kernel searches PATH, loads the program and runs it inside the same process, so the PID does not change. If it works, execvp never returns.',
+    code: 'execvp(args[0], args);\nperror("execvp failed");\n_exit(127);',
+    live: (r) => r && `Last run: PID ${r.child_pid} turned into "${r.command.split(' ')[0]}".`,
+  },
+  {
+    id: 'waitpid', title: 'waitpid()', tag: 'System call',
+    short: 'Makes the parent wait until a specific child ends.',
+    detail: "The parent blocks in waitpid(child_pid, &status, 0). This synchronises the two processes and lets the kernel hand over the child's termination status. It also removes the zombie entry.",
+    code: 'waitpid(child_pid, &status, 0);',
+    live: (r) => r && `Last run: parent ${r.parent_pid} waited for child ${r.child_pid}.`,
+  },
+  {
+    id: 'pid', title: 'PID', tag: 'Identifier',
+    short: 'Process ID: the unique number the kernel gives each process.',
+    detail: 'getpid() returns the PID of the caller. Every fork() produces a new PID, so the parent and child never share one.',
+    code: 'getpid();',
+    live: (r) => r && `Last run: parent PID ${r.parent_pid}, child PID ${r.child_pid}.`,
+  },
+  {
+    id: 'ppid', title: 'PPID', tag: 'Identifier',
+    short: 'Parent Process ID: who created this process.',
+    detail: "getppid() returns the PID of the parent. The child's PPID equals the parent's PID, which is what builds the process tree.",
+    code: 'getppid();',
+    live: (r) => r && `Last run: child ${r.child_pid} has PPID ${r.child_ppid ?? r.parent_pid}.`,
+  },
+  {
+    id: 'exit', title: 'Exit Status', tag: 'Termination',
+    short: 'A small number the child returns when it ends.',
+    detail: '0 means success. Any other value means the program reported a problem. 127 is the value NanoKernel uses when execvp() cannot start the program.',
+    code: 'int exit_status = WEXITSTATUS(status);',
+    live: (r) => r && `Last run: exit status ${r.exit_status ?? 'none (signal)'} → ${r.result}.`,
+  },
+  {
+    id: 'wifexited', title: 'WIFEXITED()', tag: 'Macro',
+    short: 'True when the child ended normally.',
+    detail: 'The status from waitpid() packs several facts into one integer. WIFEXITED(status) asks: did the child exit on its own? If not, it was probably killed by a signal (see WIFSIGNALED / WTERMSIG).',
+    code: 'if (WIFEXITED(status)) { ... }\nelse if (WIFSIGNALED(status)) { ... }',
+    live: (r) => r && `Last run: normal termination = ${r.normal_termination ? 'YES' : 'NO'}.`,
+  },
+  {
+    id: 'wexitstatus', title: 'WEXITSTATUS()', tag: 'Macro',
+    short: 'Extracts the exit code from the status.',
+    detail: 'Only valid after WIFEXITED() is true. It pulls the 8-bit exit code the child returned out of the packed status value.',
+    code: 'int exit_status = WEXITSTATUS(status);',
+    live: (r) => r && r.exit_status != null && `Last run: WEXITSTATUS = ${r.exit_status}.`,
+  },
+  {
+    id: 'pcb', title: 'PCB', tag: 'Kernel structure',
+    short: "Process Control Block: the kernel's record of a process.",
+    detail: 'The kernel keeps one PCB per process: PID, PPID, state, registers, memory maps, open files. Linux calls it task_struct. fork() creates a new one; waitpid() lets the parent collect the final status from it.',
+    code: '/* kernel side: struct task_struct */',
+    live: () => null,
+  },
+]
